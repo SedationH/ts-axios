@@ -94,3 +94,8 @@ Not Escaped:
 6. 忽略undefined && null
 7. 丢弃hash
 8. 保留已有参数
+
+
+
+![URI syntax diagram](https://upload.wikimedia.org/wikipedia/commons/thumb/d/d6/URI_syntax_diagram.svg/1068px-URI_syntax_diagram.svg.png)
+

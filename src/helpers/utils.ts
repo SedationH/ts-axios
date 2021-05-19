@@ -7,5 +7,5 @@ export function isDate(val: any): val is Date {
 }
 
 export function isObject(val: any): boolean {
-  return val !== null && toString.call(val) === '[object Object]'
+  return toString.call(val) === '[object Object]'
 }

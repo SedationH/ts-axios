@@ -3,32 +3,44 @@ import { isObject, isDate } from './utils'
 export function buildUrl(url: string, params?: any): string {
   if (!params) return url
 
+  let serializedParams
   const parts: string[] = []
+
   Object.keys(params).forEach(key => {
-    let val = params[key]
-    if (val === undefined || val === null) return
-    if (Array.isArray(val)) {
-      // 处理数组的情况
-      const values: string[] = []
-      val.forEach(value => {
-        values.push(`${key}[]=${value}`)
-      })
-      val = values.join('&')
-      parts.push(val)
-    } else if (isObject(val)) {
-      parts.push(`${key}=${encode(JSON.stringify(val))}`)
-    } else if (isDate(val)) {
-      parts.push(`${key}=${val.toISOString()}`)
-    } else {
-      parts.push(`${key}=${val}`)
+    const val = params[key]
+    if (val === null || val === undefined) {
+      return
     }
+    let values
+    if (Array.isArray(val)) {
+      values = val
+      key += '[]'
+    } else {
+      values = [val]
+    }
+    values.forEach(value => {
+      if (isDate(value)) {
+        value = value.toISOString()
+      } else if (isObject(value)) {
+        value = JSON.stringify(value)
+      }
+      parts.push(`${encode(key)}=${encode(value)}`)
+    })
+    serializedParams = parts.join('&')
   })
-  url += '?' + parts.join('&')
+  if (serializedParams) {
+    const hashmarkIndex = url.indexOf('#')
+    const querymarkIndex = url.indexOf('?')
+    if (hashmarkIndex !== -1) {
+      url = url.slice(0, hashmarkIndex)
+    }
+    url += (url.includes('?') ? '&' : '?') + serializedParams
+  }
   return url
 }
 
 console.log(
-  buildUrl('/base/get', {
+  buildUrl('/base/get?a=77#has', {
     a: [1, 2, 3],
     b: 2,
     foo: {
