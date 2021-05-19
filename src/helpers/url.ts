@@ -39,18 +39,6 @@ export function buildUrl(url: string, params?: any): string {
   return url
 }
 
-console.log(
-  buildUrl('/base/get?a=77#has', {
-    a: [1, 2, 3],
-    b: 2,
-    foo: {
-      bar: '1',
-      name: 'fo   o'
-    },
-    bar: null
-  })
-)
-
 function encode(val: string): string {
   return encodeURIComponent(val)
     .replace(/%40/g, '@')
