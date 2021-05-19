@@ -1,4 +1,4 @@
-import { isObject, isDate } from './utils'
+import { /*isObject*/ isDate, isPlainObject } from './utils'
 
 export function buildUrl(url: string, params?: any): string {
   if (!params) return url
@@ -21,7 +21,9 @@ export function buildUrl(url: string, params?: any): string {
     values.forEach(value => {
       if (isDate(value)) {
         value = value.toISOString()
-      } else if (isObject(value)) {
+        // TODO： 感觉query中也不应该出现那么多奇怪的类型
+        // 这里使用isPlainObject更加合理 ？
+      } else if (isPlainObject(value)) {
         value = JSON.stringify(value)
       }
       parts.push(`${encode(key)}=${encode(value)}`)
@@ -30,7 +32,6 @@ export function buildUrl(url: string, params?: any): string {
   })
   if (serializedParams) {
     const hashmarkIndex = url.indexOf('#')
-    const querymarkIndex = url.indexOf('?')
     if (hashmarkIndex !== -1) {
       url = url.slice(0, hashmarkIndex)
     }
