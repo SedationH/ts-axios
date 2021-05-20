@@ -1,9 +1,29 @@
-import { AxiosRequestConfig } from './types'
+import { AxiosRequestConfig, AxiosResponse, AxiosPromise } from './types'
 
-export default function(config: AxiosRequestConfig): void {
-  const { data = null, url, method = 'get' } = config
+export default function(config: AxiosRequestConfig): AxiosPromise {
+  return new Promise((resolve, reject) => {
+    const { data = null, url, method = 'get', headers } = config
 
-  const request = new XMLHttpRequest()
-  request.open(method.toUpperCase(), url, true)
-  request.send(data)
+    const request = new XMLHttpRequest()
+    request.open(method.toUpperCase(), url, true)
+
+    Object.keys(headers).forEach(name => {
+      request.setRequestHeader(name, headers[name])
+    })
+
+    request.send(data)
+
+    request.addEventListener('load', () => {
+      const responseHeaders = request.getAllResponseHeaders()
+      const response: AxiosResponse = {
+        data: request.response,
+        status: request.status,
+        statusText: request.statusText,
+        headers: responseHeaders,
+        config,
+        request
+      }
+      resolve(response)
+    })
+  })
 }
