@@ -234,6 +234,12 @@ export interface AxiosPromise extends Promise<AxiosResponse> {}
 
 `type XMLHttpRequestResponseType = "" | "arraybuffer" | "blob" | "document" | "json" | "text";`
 
+这个配置项的意义是客户端可以配置所期待的数据格式，浏览器可以对其进行解析
+
+https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/responseType
+
+
+
 
 
 对于 response && responseText
