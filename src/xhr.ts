@@ -1,4 +1,5 @@
 import { AxiosRequestConfig, AxiosResponse, AxiosPromise } from './types'
+import { parseHeaders } from './helpers/headers'
 
 export default function(config: AxiosRequestConfig): AxiosPromise {
   return new Promise((resolve, reject) => {
@@ -18,7 +19,8 @@ export default function(config: AxiosRequestConfig): AxiosPromise {
     request.send(data)
 
     request.addEventListener('load', () => {
-      const responseHeaders = request.getAllResponseHeaders()
+      const responseHeaders = parseHeaders(request.getAllResponseHeaders())
+
       const response: AxiosResponse = {
         data: request.response,
         status: request.status,

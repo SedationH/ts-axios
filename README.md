@@ -240,8 +240,6 @@ https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/responseType
 
 
 
-
-
 对于 response && responseText
 
 的区别
@@ -258,3 +256,40 @@ https://www.codestudyblog.com/questions/sf/0421165618.html
 
 resposeType中有'text'类型，这里的处理结果就和使用responseText一致了
 
+
+
+## 处理响应header
+
+在处理的时候要考虑一个问题
+
+js 中 white-space是什么？
+
+https://tc39.es/ecma262/#sec-white-space
+
+
+
+getResponseHeaders的格式
+
+An example of what a raw header string looks like:
+
+```
+date: Fri, 08 Dec 2017 21:04:30 GMT\r\n
+content-encoding: gzip\r\n
+x-content-type-options: nosniff\r\n
+server: meinheld/0.6.1\r\n
+x-frame-options: DENY\r\n
+content-type: text/html; charset=utf-8\r\n
+connection: keep-alive\r\n
+strict-transport-security: max-age=63072000\r\n
+vary: Cookie, Accept-Encoding\r\n
+content-length: 6502\r\n
+x-xss-protection: 1; mode=block\r\n
+```
+
+Each line is terminated by both carriage return and line feed characters (`\r\n`). These are essentially delimiters separating each of the headers.
+
+
+
+## 处理响应数据
+
+如果没有传入responseType，也要支持把结果可以JSON化的进行parse

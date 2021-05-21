@@ -1,5 +1,19 @@
 import { isPlainObject } from './utils'
 
+export function parseHeaders(headers: string): any {
+  const parsedHeaders = Object.create(null)
+  if (!headers) return parsedHeaders
+  const lines = headers.split(/[\r\n]+/)
+  lines.forEach(line => {
+    let [key, ...vals] = line.split(':')
+    key = key.trim().toLowerCase()
+    if (!key) return
+    const val = vals.join(':').trim()
+    parsedHeaders[key] = val
+  })
+  return parsedHeaders
+}
+
 export function processHeaders(headers: any, data: any): any {
   if (!headers) return
   normalizeHeaderName(headers, 'Content-Type')
