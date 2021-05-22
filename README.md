@@ -390,3 +390,92 @@ request.ontimeout = function handleTimeout() {
 为啥是timeout而不用ETIMEOUT 呢？
 
  https://github.com/axios/axios/blob/7821ed20892f478ca6aea929559bd02ffcc8b063/lib/adapters/xhr.js#L114
+
+
+
+## 接口扩展
+
+过去的封装过程中，我们是把axios当作一个函数来看的，现在需要更加多了接口方便使用
+
+为了用户更加方便地使用 axios 发送请求，我们可以为所有支持请求方法扩展一些接口：
+
+- `axios.request(config)`
+- `axios.get(url[, config])`
+- `axios.delete(url[, config])`
+- `axios.head(url[, config])`
+- `axios.options(url[, config])`
+- `axios.post(url[, data[, config]])`
+- `axios.put(url[, data[, config]])`
+- `axios.patch(url[, data[, config]])`
+
+如果使用了这些方法，我们就不必在 `config` 中指定 `url`、`method`、`data` 这些属性了。
+
+从需求上来看，`axios` 不再单单是一个方法，更像是一个混合对象，本身是一个方法，又有很多方法属性，接下来我们就来实现这个混合对象。
+
+
+
+原先axios函数实现的内容被封装到了Axios.prototype.request上
+
+
+
+```js
+// 原来的函数实现
+import dispatchRequest from './dispatchRequest'
+
+export default class Axios implements AxiosType {
+  request(config: AxiosRequestConfig): AxiosPromise {
+    return dispatchRequest(config)
+  }
+ ...
+```
+
+
+
+我们的目的是
+
+axios可以作为函数直接使用
+
+也可以使用上面的方便调用的接口
+
+
+
+实现逻辑如下
+
+```js
+import { AxiosInstance } from './types'
+import Axios from './core/Axios'
+import { extend } from './helpers/util'
+
+function createInstance(): AxiosInstance {
+  const context = new Axios()
+  const instance = Axios.prototype.request.bind(context)
+
+  extend(instance, context)
+
+  return instance as AxiosInstance
+}
+
+const axios = createInstance()
+
+export default axios
+```
+
+
+
+可见方法的调用是使用 instance -> Axios.prototype.request
+
+并且通过extends再这个instance ||  Axios.prototype.request 上面挂了许多方法
+
+
+
+extends
+
+```js
+export function extend<T, U>(to: T, from: U): T & U {
+  for (const key in from) {
+    ;(to as T & U)[key] = from[key] as any
+  }
+  return to as T & U
+}
+```
+

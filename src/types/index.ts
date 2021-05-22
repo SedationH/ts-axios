@@ -15,7 +15,7 @@ export type Method =
   | 'PATCH'
 
 export interface AxiosRequestConfig {
-  url: string
+  url?: string
   method?: Method
   data?: any
   params?: any
@@ -34,6 +34,29 @@ export interface AxiosResponse {
 }
 
 export interface AxiosPromise extends Promise<AxiosResponse> {}
+
+export interface Axios {
+  request(config: AxiosRequestConfig): AxiosPromise
+
+  // add
+  post(url: string, data?: any, config?: AxiosRequestConfig): AxiosPromise
+
+  // delete
+  delete(url: string, config?: AxiosRequestConfig): AxiosPromise
+
+  // modify
+  put(url: string, data?: any, config?: AxiosRequestConfig): AxiosPromise
+  patch(url: string, data?: any, config?: AxiosRequestConfig): AxiosPromise
+
+  // query
+  get(url: string, config?: AxiosRequestConfig): AxiosPromise
+  head(url: string, config?: AxiosRequestConfig): AxiosPromise
+  options(url: string, config?: AxiosRequestConfig): AxiosPromise
+}
+
+export interface AxiosInstance extends Axios {
+  (config: AxiosRequestConfig): AxiosPromise
+}
 
 export interface AxiosError extends Error {
   isAxiosError: boolean
