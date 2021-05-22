@@ -322,9 +322,7 @@ Each line is terminated by both carriage return and line feed characters (`\r\n`
 
 ## 错误处理
 
-处理异常逻辑
-
-
+### 处理异常逻辑
 
 ```
 	 onreadystatechange
@@ -343,3 +341,52 @@ error
 
 
 
+timeout
+
+
+
+状态码不在2xx范围内
+
+
+
+### 错误信息增强
+
+```js
+export interface AxiosError extends Error {
+  isAxiosError: boolean
+  config: AxiosRequestConfig
+  code?: number | null | string
+  // 考虑node环境
+  // request?: XMLHttpRequest
+  request?: any
+  response?: AxiosResponse
+}
+```
+
+
+
+关于code这里有些问题
+
+0.22.1版本的axios
+
+```js
+// Handle timeout
+request.ontimeout = function handleTimeout() {
+  var timeoutErrorMessage = 'timeout of ' + config.timeout + 'ms exceeded';
+  if (config.timeoutErrorMessage) {
+    timeoutErrorMessage = config.timeoutErrorMessage;
+  }
+  reject(createError(
+    timeoutErrorMessage,
+    config,
+    config.transitional && config.transitional.clarifyTimeoutError ? 'ETIMEDOUT' : 'ECONNABORTED',
+    request));
+
+  // Clean up request
+  request = null;
+};
+```
+
+为啥是timeout而不用ETIMEOUT 呢？
+
+ https://github.com/axios/axios/blob/7821ed20892f478ca6aea929559bd02ffcc8b063/lib/adapters/xhr.js#L114

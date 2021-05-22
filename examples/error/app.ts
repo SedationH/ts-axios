@@ -1,4 +1,4 @@
-import axios from '../../src/index'
+import axios, { AxiosError } from '../../src/index'
 
 // 没有和这个路由 404
 // axios({
@@ -31,6 +31,6 @@ axios({
   .then(res => {
     console.log(res)
   })
-  .catch(e => {
-    console.log('catch:', e.message)
+  .catch((e: AxiosError) => {
+    console.log('catch:', e.code)
   })
