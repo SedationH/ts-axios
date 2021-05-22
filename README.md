@@ -1,12 +1,36 @@
 ## 前置知识 && 索引
 
-关于URL https://blog.bitsrc.io/using-the-url-object-in-javascript-5f43cd743804
-
-使用TypeScript重构Axios https://younglele.cn/ts-axios-doc/chapter4/url.html#%E9%9C%80%E6%B1%82%E5%88%86%E6%9E%90
+参考文章 使用TypeScript重构Axios https://younglele.cn/ts-axios-doc/chapter4/url.html#%E9%9C%80%E6%B1%82%E5%88%86%E6%9E%90
 
 
 
-## 处理AxiosRequestConfig 中的 params
+### 关于URL
+
+ https://blog.bitsrc.io/using-the-url-object-in-javascript-5f43cd743804
+
+
+
+### 底层是对XMLHttpReqest的封装📦
+
+https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest
+
+https://javascript.info/xmlhttprequest
+
+    	 onreadystatechange
+      	readyState === 4
+             ⇓
+     onload / onerror / onabort
+                 ⇓
+    				onloadend
+An `XMLHttpRequest` object travels them in the order `0` → `1` → `2` → `3` → … → `3` → `4`. State `3` repeats every time a data packet is received over the network.
+
+
+
+## 基础功能
+
+
+
+### 处理AxiosRequestConfig 中的 params
 
 有以下几种情况
 
@@ -103,7 +127,7 @@ Not Escaped:
 
 
 
-## 处理body数据
+### 处理body数据
 
 注意使用`isPlainObject`
 
@@ -150,7 +174,7 @@ DOMString 除了URL的环境 （JS，文本处理？
 
 
 
-## 处理请求header
+### 处理请求header
 
 ![image-20210519210716189](http://picbed.sedationh.cn/image-20210519210716189.png)
 
@@ -189,7 +213,7 @@ axios({
 
 
 
-## 获得响应数据
+### 获得响应数据
 
 ```js
 axios({
@@ -258,7 +282,7 @@ resposeType中有'text'类型，这里的处理结果就和使用responseText一
 
 
 
-## 处理响应header
+### 处理响应header
 
 在处理的时候要考虑一个问题
 
@@ -290,6 +314,32 @@ Each line is terminated by both carriage return and line feed characters (`\r\n`
 
 
 
-## 处理响应数据
+### 处理响应数据
 
 如果没有传入responseType，也要支持把结果可以JSON化的进行parse
+
+
+
+## 错误处理
+
+处理异常逻辑
+
+
+
+```
+	 onreadystatechange
+  	readyState === 4
+         ⇓
+ onload / onerror / onabort
+             ⇓
+				onloadend
+```
+
+
+
+error
+
+> It's important to note that this is only called if there's an error at the network level. If the error only exists at the application level (e.g. an HTTP error code is sent), this method will not be called.
+
+
+
