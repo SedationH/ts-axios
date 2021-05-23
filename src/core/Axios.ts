@@ -7,9 +7,17 @@ import {
 import dispatchRequest from './dispatchRequest'
 
 export default class Axios implements AxiosType {
-  request(config: AxiosRequestConfig): AxiosPromise {
-    return dispatchRequest(config)
+request(url: any, config?: any): AxiosPromise {
+  if (typeof url === 'string') {
+    if (!config) {
+      config = {}
+    }
+    config.url = url
+  } else {
+    config = url
   }
+  return dispatchRequest(config)
+}
 
   get(url: string, config?: AxiosRequestConfig): AxiosPromise {
     return this._requestMethodWithoutData('get', url, config)

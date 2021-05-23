@@ -395,6 +395,8 @@ request.ontimeout = function handleTimeout() {
 
 ## 接口扩展
 
+### 接口扩展
+
 过去的封装过程中，我们是把axios当作一个函数来看的，现在需要更加多了接口方便使用
 
 为了用户更加方便地使用 axios 发送请求，我们可以为所有支持请求方法扩展一些接口：
@@ -479,3 +481,117 @@ export function extend<T, U>(to: T, from: U): T & U {
 }
 ```
 
+### 函数重载
+
+现在axios作为函数直接调用的函数签名为
+
+```ts
+request(config: AxiosRequestConfig): AxiosPromise {
+  return dispatchRequest(config)
+}
+
+axios({
+  url: '/extend/post',
+  method: 'post',
+  data: {
+    msg: 'hi'
+  }
+})
+```
+
+
+
+现在希望能够向axios作为函数调用的时候传入两个参数
+
+```js
+axios('/extend/post', {
+  method: 'post',
+  data: {
+    msg: 'hello'
+  }
+})
+```
+
+
+
+这里要注意的是，我们虽然修改了 `request` 的实现，支持了 2 种参数，但是我们对外提供的 `request` 接口仍然不变，可以理解为这仅仅是内部的实现的修改，与对外接口不必一致，只要保留实现兼容接口即可。
+
+```js
+export interface AxiosInstance extends Axios {
+  (config: AxiosRequestConfig): AxiosPromise
+
+  (url: string, config?: AxiosRequestConfig): AxiosPromise
+}
+
+request(url: any, config?: any): AxiosPromise {
+  if (typeof url === 'string') {
+    if (!config) {
+      config = {}
+    }
+    config.url = url
+  } else {
+    config = url
+  }
+  return dispatchRequest(config)
+}
+```
+
+### 响应数据支持范型
+
+场景
+
+通常情况下，我们会把后端返回数据格式单独放入一个接口中：
+
+```typescript
+// 请求接口数据
+export interface ResponseData<T = any> {
+  /**
+   * 状态码
+   * @type { number }
+   */
+  code: number
+
+  /**
+   * 数据
+   * @type { T }
+   */
+  result: T
+
+  /**
+   * 消息
+   * @type { string }
+   */
+  message: string
+}
+```
+
+我们可以把 API 抽离成单独的模块：
+
+```typescript
+import { ResponseData } from './interface.ts';
+
+export function getUser<T>() {
+  return axios.get<ResponseData<T>>('/somepath')
+    .then(res => res.data)
+    .catch(err => console.error(err))
+}
+```
+
+接着我们写入返回的数据类型 `User`，这可以让 TypeScript 顺利推断出我们想要的类型：
+
+```typescript
+interface User {
+  name: string
+  age: number
+}
+
+async function test() {
+  // user 被推断出为
+  // {
+  //  code: number,
+  //  result: { name: string, age: number },
+  //  message: string
+  // }
+  const user = await getUser<User>()
+}
+```
