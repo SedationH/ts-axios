@@ -17,7 +17,7 @@ axios.interceptors.response.use(res => {
   res.data += '1'
   return res
 })
-let interceptor = axios.interceptors.response.use(res => {
+let interceptorId = axios.interceptors.response.use(res => {
   res.data += '2'
   return res
 })
@@ -26,7 +26,7 @@ axios.interceptors.response.use(res => {
   return res
 })
 
-// axios.interceptors.response.eject(interceptor)
+axios.interceptors.response.eject(interceptorId)
 
 axios({
   url: '/interceptor/get',
@@ -37,4 +37,3 @@ axios({
 }).then(res => {
   console.log(res.data)
 })
-

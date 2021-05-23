@@ -2,6 +2,7 @@ import {
   Axios as AxiosType,
   AxiosPromise,
   AxiosRequestConfig,
+  AxiosResponse,
   Method,
   Interceptors,
   ResolvedFn,
@@ -20,8 +21,8 @@ export default class Axios implements AxiosType {
 
   constructor() {
     this.interceptors = {
-      request: new InterceptorManager(),
-      response: new InterceptorManager()
+      request: new InterceptorManager<AxiosRequestConfig>(),
+      response: new InterceptorManager<AxiosResponse>()
     }
   }
 
