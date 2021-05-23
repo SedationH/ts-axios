@@ -4,7 +4,6 @@ import {
   AxiosRequestConfig,
   AxiosResponse,
   Method,
-  Interceptors,
   ResolvedFn,
   RejectedFn
 } from '../types'
@@ -14,6 +13,11 @@ import InterceptorManager from './InterceptorManager'
 interface PromiseChain<T> {
   resolved: ResolvedFn<T> | ((config: AxiosRequestConfig) => AxiosPromise)
   rejected?: RejectedFn
+}
+
+interface Interceptors {
+  request: InterceptorManager<AxiosRequestConfig>
+  response: InterceptorManager<AxiosResponse>
 }
 
 export default class Axios implements AxiosType {

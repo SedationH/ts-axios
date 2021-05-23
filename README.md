@@ -671,3 +671,7 @@ axios.interceptors.response.use(res => {
 ```
 
 ![image-20210523192513951](http://picbed.sedationh.cn/image-20210523192513951.png)
+
+
+
+关于types

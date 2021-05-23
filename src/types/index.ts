@@ -1,5 +1,3 @@
-import InterceptorManager from '../core/InterceptorManager'
-
 export type Method =
   | 'get'
   | 'GET'
@@ -36,6 +34,13 @@ export interface AxiosResponse<T = any> {
 }
 
 export interface AxiosPromise<T = any> extends Promise<AxiosResponse<T>> {}
+
+// 仅仅向外暴露两个调用接口
+interface InterceptorManager<T> {
+  use(resolved: ResolvedFn<T>, rejected?: RejectedFn): number
+
+  eject(id: number): void
+}
 
 export interface Interceptors {
   request: InterceptorManager<AxiosRequestConfig>
