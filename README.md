@@ -595,3 +595,48 @@ async function test() {
   const user = await getUser<User>()
 }
 ```
+
+## 拦截器实现
+
+使用大概如下
+
+```js
+// 添加一个请求拦截器
+axios.interceptors.request.use(function (config) {
+  // 在发送请求之前可以做一些事情
+  return config;
+}, function (error) {
+  // 处理请求错误
+  return Promise.reject(error);
+});
+// 添加一个响应拦截器
+axios.interceptors.response.use(function (response) {
+  // 处理响应数据
+  return response;
+}, function (error) {
+  // 处理响应错误
+  return Promise.reject(error);
+});
+```
+
+可以添加多个
+
+注意⚠️响应和请求向拦截器添加的时候，顺序不一样
+
+![image-20210523104827353](http://picbed.sedationh.cn/image-20210523104827353.png)
+
+也可以通过use返回的id，来进行删除
+
+```js
+const myInterceptor = axios.interceptors.request.use(function () {/*...*/})
+axios.interceptors.request.eject(myInterceptor)
+```
+
+
+
+整个过程是一个链式调用的方式，并且每个拦截器都可以支持同步和异步处理，我们自然而然地就联想到使用 Promise 链的方式来实现整个调用过程。
+
+在这个 Promise 链的执行过程中，请求拦截器 `resolve` 函数处理的是 `config` 对象，而相应拦截器 `resolve` 函数处理的是 `response` 对象。
+
+
+

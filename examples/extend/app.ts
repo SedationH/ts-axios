@@ -21,7 +21,6 @@ import axios from '../../src/index'
 // axios.options('/extend/options')
 
 // axios.delete('/extend/delete')
-
 // axios.head('/extend/head')
 
 // axios.post('/extend/post', { msg: 'post' })
