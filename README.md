@@ -640,7 +640,7 @@ axios.interceptors.request.eject(myInterceptor)
 
 
 
-## 效果
+### 效果
 
 ```js
 axios.interceptors.request.use(config => {
@@ -674,4 +674,20 @@ axios.interceptors.response.use(res => {
 
 
 
-关于types
+### 关于types
+
+在types.ts文件中的，是向外暴露的/通用的
+
+
+
+在各自的文件中还可以再写自己的types / 接口
+
+区分内部和外部的调用
+
+
+
+
+
+## TODO
+
+MVP 实现AXIOS

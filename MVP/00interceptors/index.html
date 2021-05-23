@@ -1,0 +1,21 @@
+<script>
+  function axiso(config) {}
+
+  axiso.interceptor.request.use(config => {
+    config.test += 1
+  })
+  axiso.interceptor.request.use(config => {
+    config.test += 2
+  })
+
+  axiso.interceptor.response.use(response => {
+    response.data += 1
+  })
+  axiso.interceptor.response.use(response => {
+    response.data += 2
+  })
+
+  axiso({
+    url: 'baidu.com'
+  })
+</script>
