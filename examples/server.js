@@ -123,6 +123,12 @@ router.get('/error/timeout', function(req, res) {
     res.end('hello ')
   })
 }
+
+{
+  router.post('/config/post', function(req, res) {
+    res.json(req.body)
+  })
+}
 app.use(router)
 
 const port = process.env.PORT || 8080

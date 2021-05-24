@@ -674,6 +674,39 @@ axios.interceptors.response.use(res => {
 
 
 
+### 关键逻辑
+
+```js
+// 添加拦截器逻辑
+const chain: Array<PromiseChain<any>> = [
+  {
+    resolved: dispatchRequest,
+    rejected: undefined
+  }
+]
+
+// 获取添加上的拦截器
+this.interceptors.request.forEach((interceptor: any) => {
+  // 新来的放到前面
+  chain.unshift(interceptor)
+})
+this.interceptors.response.forEach((interceptor: any) => {
+  chain.push(interceptor)
+})
+
+let promise = Promise.resolve(config)
+while (chain.length) {
+  // chain.shift() 可能是 undefined 这里需要断言
+  const { resolved, rejected } = chain.shift()!
+  promise = promise.then(resolved, rejected)
+}
+
+// return dispatchRequest(config)
+return promise
+```
+
+
+
 ### 关于types
 
 在types.ts文件中的，是向外暴露的/通用的
@@ -683,6 +716,225 @@ axios.interceptors.response.use(res => {
 在各自的文件中还可以再写自己的types / 接口
 
 区分内部和外部的调用
+
+
+
+## 配置化实现
+
+ ### 默认配置和合并行为设计
+
+引入默认配置
+
+这需要处理用户的配置和添加的配置如何进行合并
+
+与Axios和设计保持一致
+
+```ts
+axios.defaults.headers.common['test'] = 123
+axios.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded'
+axios.defaults.timeout = 2000
+```
+
+其中对于 `headers` 的默认配置支持 `common` 和一些请求 `method` 字段，`common` 表示对于任何类型的请求都要添加该属性，而 `method` 表示只有该类型请求方法才会添加对应的属性。
+
+在上述例子中，我们会默认为所有请求的 `header` 添加 `test` 属性，会默认为 `post` 请求的 `header` 添加 `Content-Type` 属性。
+
+
+
+不同类型的字段有不同的合并策略
+
+```js
+config1 = {
+  method: 'get',
+
+  timeout: 0,
+
+  headers: {
+    common: {
+      Accept: 'application/json, text/plain, */*'
+    }
+  }
+}
+
+config2 = {
+  url: '/config/post',
+  method: 'post',
+  data: {
+    a: 1
+  },
+  headers: {
+    test: '321'
+  }
+}
+
+merged = {
+  url: '/config/post',
+  method: 'post',
+  data: {
+    a: 1
+  },
+  timeout: 0,
+  headers: {
+    common: {
+      Accept: 'application/json, text/plain, */*'
+    }
+    test: '321'
+  }
+}
+```
+
+合并的策略有三种
+
+1. 默认合并策略
+   1. 用户配置的优先级更高
+   2. 若无用户配置，使用默认配置
+2. 只接受自定义配置策略
+   1. 字面意思
+3. 复杂对象合并策略（headers
+
+
+
+![image-20210524110454344](http://picbed.sedationh.cn/image-20210524110454344.png)
+
+```js
+axios.defaults.headers.common['test2'] = 123
+
+axios({
+  url: '/config/post',
+  method: 'post',
+  data: qs.stringify({
+    a: 1
+  }),
+  headers: {
+    test: '321'
+  }
+}).then(res => {
+  console.log(res.data)
+})
+```
+
+
+
+这一块还是比较复杂的
+
+merge根据不同的配置key选择不同的策略
+
+如headers选择 deepMerge策略
+
+这里有对策略模式的使用，看起来还挺优雅
+
+```js
+ deepMerge(
+   {
+     common: {
+       test2: 123
+     }
+   },
+   {
+     common: {
+       test2: 3,
+       test1: 1
+     },
+     foo: 'foo'
+   }
+ )
+// 假设拿到了上面的两个headers需要进行合并
+{
+  {
+     common: {
+       test2: 3,
+       test1: 1
+     },
+     foo: 'foo'
+   },
+}
+```
+
+核心实现如下
+
+```js
+function isPlainObject(val) {
+  return toString.call(val) === '[object Object]'
+}
+function deepMerge(...objs) {
+  const result = Object.create(null)
+
+  // 从前向后执行，后面覆盖前面
+  objs.forEach(obj => {
+    if (obj) {
+      Object.keys(obj).forEach(key => {
+        const currVal = obj[key]
+        // 对于object的情况都要进行deepMerge
+        // 创建新的对象
+        if (isPlainObject(currVal)) {
+          // 看结果里是否存在 并且是个对象
+          const resultVal = result[key]
+          if (isPlainObject(resultVal)) {
+            result[key] = deepMerge(resultVal, currVal)
+          } else {
+            result[key] = deepMerge(currVal)
+          }
+        } else {
+          result[key] = currVal
+        }
+      })
+    }
+  })
+
+  return result
+}
+```
+
+
+
+合并了还没完
+
+因为开始我们使用
+
+```js
+{
+  common: {
+		....
+	},
+  get: {
+    
+  }
+}
+```
+
+方便我们进行默认值和不同请求方式的处理
+
+现在还需要根据我们进行请求的方式进行flattern，并且把不需要的headers进删除
+
+
+
+```js
+// 默认method 为 get
+export function flattenHeaders(headers: any, method: Method): any {
+  if (!headers) {
+    return headers
+  }
+  // 这里注意是个新对象～
+  headers = deepMerge(headers.common || {}, headers[method] || {}, headers)
+
+  const methodsToDelete = [
+    'delete',
+    'get',
+    'head',
+    'options',
+    'post',
+    'put',
+    'patch',
+    'common'
+  ]
+
+  methodsToDelete.forEach(method => {
+    delete headers[method]
+  })
+
+  return headers
+}
+```
 
 
 

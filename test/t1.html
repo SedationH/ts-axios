@@ -1,27 +1,8 @@
-export function extend<T, U>(to: T, from: U): T & U {
-  for (const key in from) {
-    ;(to as T & U)[key] = from[key] as any
-  }
-  return to as T & U
-}
-
-const toString = Object.prototype.toString
-
-// TODO: 参考类型保护
-// https://younglele.cn/ts-axios-doc/chapter2/advance.html#%E7%B1%BB%E5%9E%8B%E4%BF%9D%E6%8A%A4
-export function isDate(val: any): val is Date {
-  return toString.call(val) === '[object Date]'
-}
-
-// 注意区分 isObject && isPlainObject的使用需求·
-export function isObject(val: any): val is Object {
-  return val !== null && typeof val === 'object'
-}
-
-export function isPlainObject(val: any): val is Object {
+<script>
+function isPlainObject(val) {
   return toString.call(val) === '[object Object]'
 }
-export function deepMerge(...objs: Array<any>) {
+function deepMerge(...objs) {
   const result = Object.create(null)
 
   // 从前向后执行，后面覆盖前面
@@ -48,3 +29,21 @@ export function deepMerge(...objs: Array<any>) {
 
   return result
 }
+
+  console.dir(
+    deepMerge(
+      {
+        common: {
+          test2: 123
+        }
+      },
+      {
+        common: {
+          test2: 3,
+          test1: 1
+        },
+        foo: 'foo'
+      }
+    )
+  )
+</script>

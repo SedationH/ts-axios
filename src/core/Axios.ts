@@ -9,6 +9,7 @@ import {
 } from '../types'
 import dispatchRequest from './dispatchRequest'
 import InterceptorManager from './InterceptorManager'
+import mergeConfig from './mergeConfig'
 
 interface PromiseChain<T> {
   resolved: ResolvedFn<T> | ((config: AxiosRequestConfig) => AxiosPromise)
@@ -21,9 +22,11 @@ interface Interceptors {
 }
 
 export default class Axios implements AxiosType {
+  defaults: AxiosRequestConfig
   interceptors: Interceptors
 
-  constructor() {
+  constructor(initConfig: AxiosRequestConfig) {
+    this.defaults = initConfig
     this.interceptors = {
       request: new InterceptorManager<AxiosRequestConfig>(),
       response: new InterceptorManager<AxiosResponse>()
@@ -39,6 +42,8 @@ export default class Axios implements AxiosType {
     } else {
       config = url
     }
+
+    config = mergeConfig(this.defaults, config)
 
     // 添加拦截器逻辑
     const chain: Array<PromiseChain<any>> = [

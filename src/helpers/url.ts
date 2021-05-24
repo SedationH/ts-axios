@@ -1,4 +1,4 @@
-import { /*isObject*/ isDate, isPlainObject } from './utils'
+import { /*isObject*/ isDate, isPlainObject } from './util'
 
 export function buildUrl(url: string, params?: any): string {
   if (!params) return url
