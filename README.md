@@ -938,6 +938,90 @@ export function flattenHeaders(headers: any, method: Method): any {
 
 
 
+### 请求和响应 headers && data 处理配置化
+
+**理一下headers && data的处理**
+
+
+
+请求发出之前要进行 processConfig 处理headers && data数据
+
+```js
+processConfig(config)
+return xhr(config).then(response => {
+  return transformResponse(response)
+})
+```
+
+
+
+请求返回后也有进行数据处理 `transformResponse`
+
+`processConfig` 中
+
+1. 要处理URL，（主要针对的是有params的时候
+2. 要根据request的data(isPlainObject) 更改Content-Type (application/json)
+3. normalizeHeaderName
+4. 处理body数据，详细🔎参考 `基础功能-处理body数据`
+5. flattern headers 这个主要是Axios支持 common get 这样的全局header配置方式
+
+
+
+`transformResponse` 就是尝试JSON.parse一下服务器返回的结果
+
+
+
+
+
+现在要做的就是把这个过程线性化
+
+通过transform进行封装📦
+
+
+
+```js
+axios({
+  transformRequest: [
+    function(data) {
+      return qs.stringify(data)
+    },
+    ...(axios.defaults.transformRequest as AxiosTransformer[])
+  ],
+  transformResponse: [
+    ...(axios.defaults.transformResponse as AxiosTransformer[]),
+    function(data) {
+      if (typeof data === 'object') {
+        data.a = 8
+      }
+      return data
+    }
+  ],
+  url: '/config/post',
+  method: 'post',
+  data: {
+    a: 1
+  }
+}).then(res => {
+  console.log(res.data)
+})
+```
+
+这样进行调用的时候，transformRequest && transformResponse 都遵循defaultStragety，所以在
+
+`    config = mergeConfig(this.defaults, config)` 的时候，我们传入的都会直接把defaults中的覆盖掉
+
+ 
+
+### 添加create静态方法
+
+目前的Axios是一个单例，修改默认的配置可能会对其他所有的请求产生影响
+
+
+
+目前需要支持创建新的实例
+
+
+
 
 
 ## TODO

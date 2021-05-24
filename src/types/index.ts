@@ -22,6 +22,8 @@ export interface AxiosRequestConfig {
   headers?: any
   responseType?: XMLHttpRequestResponseType
   timeout?: number
+  transformRequest?: AxiosTransformer | AxiosTransformer[]
+  transformResponse?: AxiosTransformer | AxiosTransformer[]
 
   [property: string]: any
 }
@@ -88,7 +90,17 @@ export interface AxiosInstance extends Axios {
   <T = any>(config: AxiosRequestConfig): AxiosPromise<T>
 
   <T = any>(url: string, config?: AxiosRequestConfig): AxiosPromise<T>
+
+  create(config: AxiosRequestConfig): AxiosInstance
 }
+
+
+// TODO: 感觉暂时还不需要
+// export interface AxiosStatic extends AxiosInstance {
+//   create(config?: AxiosRequestConfig): AxiosInstance
+// }
+
+export interface AxiosStatic extends Axios {}
 
 export interface AxiosError extends Error {
   isAxiosError: boolean
@@ -106,4 +118,8 @@ export interface ResolvedFn<T> {
 
 export interface RejectedFn {
   (error: any): any
+}
+
+export interface AxiosTransformer {
+  (data: any, headers?: any): any
 }
