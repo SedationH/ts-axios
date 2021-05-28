@@ -38,6 +38,15 @@ app.use(cookieParser())
 // 路由相关
 const router = express.Router()
 
+registerUploadRouter()
+
+function registerUploadRouter() {
+  router.post('/upload-download/upload', function(req, res) {
+    console.log(req.body, req.files)
+    res.end('upload success!')
+  })
+}
+
 router.get('/simple/get', function(req, res) {
   res.json({
     msg: `hello world`

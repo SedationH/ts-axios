@@ -16,7 +16,9 @@ export default function(config: AxiosRequestConfig): AxiosPromise {
       cancelToken,
       withCredentials,
       xsrfCookieName,
-      xsrfHeaderName
+      xsrfHeaderName,
+      onDownloadProgress,
+      onUploadProgress
     } = config
 
     const request = new XMLHttpRequest()
@@ -46,6 +48,14 @@ export default function(config: AxiosRequestConfig): AxiosPromise {
       if (xsrfValue && xsrfHeaderName) {
         headers[xsrfHeaderName] = xsrfValue
       }
+    }
+
+    if (onDownloadProgress) {
+      request.onprogress = onDownloadProgress
+    }
+
+    if (onUploadProgress) {
+      request.upload.onprogress = onUploadProgress
     }
 
     Object.keys(headers).forEach(name => {
