@@ -1097,6 +1097,51 @@ cancel('abort')
 
 
 
+## withCredentials
+
+考虑CORS，携带cookie等信息
+
+需要
+
+client:
+
+```js
+xhr.withCredentials = true
+```
+
+serve:
+
+```js
+const cors = {
+  'Access-Control-Allow-Origin': 'http://localhost:8080',
+  'Access-Control-Allow-Credentials': true,
+  'Access-Control-Allow-Methods': 'POST, GET, PUT, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type'
+}
+
+router.post('/more/server2', (req, res) => {
+  res.set(cors)
+  res.json(req.cookies)
+})
+
+router.options('/more/server2', (req, res) => {
+  res.set(cors)
+  res.end()
+})
+```
+
+配置CORS && options请求
+
+这里🤨存疑，无论是给的demo还是自己写的，都没有在发起请求的时候拿到请求所在域的cookie。
+
+TODO
+
+
+
+
+
+
+
 ## TODO
 
 MVP 实现AXIOS

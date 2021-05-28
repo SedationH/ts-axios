@@ -4,6 +4,8 @@ const webpack = require('webpack')
 const webpackDevMiddleware = require('webpack-dev-middleware')
 const webpackHotMiddleware = require('webpack-hot-middleware')
 const WebpackConfig = require('./webpack.config')
+const cookieParser = require('cookie-parser')
+require('./serve2.js')
 
 const app = express()
 const compiler = webpack(WebpackConfig)
@@ -24,6 +26,7 @@ app.use(express.static(__dirname))
 
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
+app.use(cookieParser())
 
 // 路由相关
 const router = express.Router()
@@ -143,6 +146,13 @@ router.get('/error/timeout', function(req, res) {
     }, 1000)
   })
 }
+
+{
+  router.get('/more/get', (req, res) => {
+    res.json(req.cookies)
+  })
+}
+
 app.use(router)
 
 const port = process.env.PORT || 8080

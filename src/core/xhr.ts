@@ -11,7 +11,8 @@ export default function(config: AxiosRequestConfig): AxiosPromise {
       headers,
       responseType,
       timeout,
-      cancelToken
+      cancelToken,
+      withCredentials
     } = config
 
     const request = new XMLHttpRequest()
@@ -28,11 +29,16 @@ export default function(config: AxiosRequestConfig): AxiosPromise {
     Object.keys(headers).forEach(name => {
       request.setRequestHeader(name, headers[name])
     })
+
     if (cancelToken) {
       cancelToken.promise.then((reason: string) => {
         request.abort()
         reject(reason)
       })
+    }
+
+    if (withCredentials) {
+      request.withCredentials = true
     }
 
     request.send(data)
