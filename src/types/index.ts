@@ -24,6 +24,7 @@ export interface AxiosRequestConfig {
   timeout?: number
   transformRequest?: AxiosTransformer | AxiosTransformer[]
   transformResponse?: AxiosTransformer | AxiosTransformer[]
+  cancelToken?: CancelToken
 
   [property: string]: any
 }
@@ -90,17 +91,13 @@ export interface AxiosInstance extends Axios {
   <T = any>(config: AxiosRequestConfig): AxiosPromise<T>
 
   <T = any>(url: string, config?: AxiosRequestConfig): AxiosPromise<T>
-
-  create(config: AxiosRequestConfig): AxiosInstance
 }
 
+export interface AxiosStatic extends AxiosInstance {
+  create(config?: AxiosRequestConfig): AxiosInstance
 
-// TODO: 感觉暂时还不需要
-// export interface AxiosStatic extends AxiosInstance {
-//   create(config?: AxiosRequestConfig): AxiosInstance
-// }
-
-export interface AxiosStatic extends Axios {}
+  CancelToken: CancelTokenStatic
+}
 
 export interface AxiosError extends Error {
   isAxiosError: boolean
@@ -122,4 +119,21 @@ export interface RejectedFn {
 
 export interface AxiosTransformer {
   (data: any, headers?: any): any
+}
+
+export interface CancelToken {
+  promise: Promise<string>
+  reason?: string
+}
+
+export interface CancelTokenStatic {
+  new (executor: CancelExecutor): CancelToken
+}
+
+export interface Canceler {
+  (message?: string): void
+}
+
+export interface CancelExecutor {
+  (cancel: Canceler): void
 }

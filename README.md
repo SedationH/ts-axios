@@ -1024,6 +1024,79 @@ axios({
 
 
 
+## 取消功能
+
+### 使用场景
+
+设有请求a
+
+setInterval 发起请求a
+
+要求如果前面的请求没有返回结果，再发起请求的时候需要结束上一个请求
+
+### MVP
+
+```js
+class CancelToken {
+  constructor(executor) {
+    let resolveFn
+    this.promise = new Promise(resolve => {
+      resolveFn = resolve
+    })
+
+    // 向executor中传入函数
+    executor(message => {
+      this.reason = message
+      resolveFn(this.reason)
+    })
+  }
+}
+
+// 在使用axios的时候
+function axios(config) {
+  const { method, url, cancelToken } = config
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest()
+    xhr.open(method.toUpperCase(), url, true)
+
+    if (cancelToken) {
+      cancelToken.promise.then(reason => {
+        xhr.abort()
+        reject(reason)
+      })
+    }
+
+    xhr.send()
+
+    xhr.addEventListener('loadend', () => {
+      console.log('loadend', xhr.status)
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve(xhr)
+      } else {
+        reject(xhr)
+      }
+    })
+  })
+}
+
+let cancel
+axios({
+  cancelToken: new CancelToken(c => (cancel = c)),
+  url: '/simple/get',
+  method: 'GET'
+}).then(
+  value => {
+    console.log('value', value)
+  },
+  reason => {
+    console.log('reason', reason)
+  }
+)
+cancel('abort')
+```
+
+
+
 ## TODO
 
 MVP 实现AXIOS

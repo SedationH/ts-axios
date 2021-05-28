@@ -1,49 +1,12 @@
 <script>
-function isPlainObject(val) {
-  return toString.call(val) === '[object Object]'
-}
-function deepMerge(...objs) {
-  const result = Object.create(null)
+  var xhr = new XMLHttpRequest(),
+    method = 'GET',
+    url = 'https://developer.mozilla.org/'
+  xhr.open(method, url, true)
 
-  // 从前向后执行，后面覆盖前面
-  objs.forEach(obj => {
-    if (obj) {
-      Object.keys(obj).forEach(key => {
-        const currVal = obj[key]
-        // 对于object的情况都要进行deepMerge
-        // 创建新的对象
-        if (isPlainObject(currVal)) {
-          // 看结果里是否存在 并且是个对象
-          const resultVal = result[key]
-          if (isPlainObject(resultVal)) {
-            result[key] = deepMerge(resultVal, currVal)
-          } else {
-            result[key] = deepMerge(currVal)
-          }
-        } else {
-          result[key] = currVal
-        }
-      })
-    }
-  })
+  xhr.send()
 
-  return result
-}
-
-  console.dir(
-    deepMerge(
-      {
-        common: {
-          test2: 123
-        }
-      },
-      {
-        common: {
-          test2: 3,
-          test1: 1
-        },
-        foo: 'foo'
-      }
-    )
-  )
+  if (0) {
+    xhr.abort()
+  }
 </script>
