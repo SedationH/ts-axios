@@ -1,12 +1,10 @@
 <script>
-  var xhr = new XMLHttpRequest(),
-    method = 'GET',
-    url = 'https://developer.mozilla.org/'
-  xhr.open(method, url, true)
-
-  xhr.send()
-
-  if (0) {
-    xhr.abort()
+  function read(name) {
+    const match = 'a=v;c=1234;foo=bar;b=;hei=3'.match(
+      new RegExp('(^|;\\s*)(' + name + ')=([^;]*)')
+    )
+    return match ? decodeURIComponent(match[3]) : null
   }
+
+  console.log(read('a'))
 </script>

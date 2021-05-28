@@ -1138,7 +1138,147 @@ TODO
 
 
 
+## CSRF
 
+**XSS** 利用的是用户对指定网站的信任，CSRF 利用的是网站对用户网页浏览器的信任。
+
+假设有Web A
+
+什么情况下A会出现 CSRF 问题？
+
+A仅仅将cookie当作认证信息
+
+比如存在接口 a.com/shop?buy=true 来付钱
+
+
+
+用户在访问Web B的时候
+
+Web B发起a.com/shop?buy=true的请求，这个请求还携带着A站点的cookie信息，因此可以通过A站点的用户认证，从而执行了B想要的操作。
+
+> ### [Simple requests](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS#simple_requests)
+>
+> Some requests don’t trigger a [CORS preflight](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS#preflighted_requests). Those are called *“simple requests”* in this article, though the [Fetch](https://fetch.spec.whatwg.org/) spec (which defines CORS) doesn’t use that term. A “simple request” is one that **meets all the following conditions**:
+>
+> - One of the allowed methods:
+>
+>   - [`GET`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/GET)
+>   - [`HEAD`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/HEAD)
+>   - [`POST`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/POST)
+>
+> - Apart from the headers automatically set by the user agent (for example,`Connection`,`User-Agent`, or the other headers defined in the Fetch spec as a “forbidden header name”), the only headers which are allowed to be manually set are those which the Fetch spec defines as a “CORS-safelisted request-header”, which are:
+>
+>   - [`Accept`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept)
+>   - [`Accept-Language`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Language)
+>   - [`Content-Language`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Language)
+>   - [`Content-Type`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type) (but note the additional requirements below)
+>
+> - The only allowed values for the
+>
+>   `Content-Type`
+>
+>   header are:
+>
+>   - `application/x-www-form-urlencoded`
+>   - `multipart/form-data`
+>   - `text/plain`
+>
+> - If the request is made using an [`XMLHttpRequest`](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest) object, no event listeners are registered on the object returned by the [`XMLHttpRequest.upload`](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/upload) property used in the request; that is, given an [`XMLHttpRequest`](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest) instance `xhr`, no code has called `xhr.upload.addEventListener()` to add an event listener to monitor the upload.
+>
+> - No [`ReadableStream`](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream) object is used in the request.
+
+> CSRF 的防御手段有很多，比如验证请求的 referer，但是 referer 也是可以伪造的，所以杜绝此类攻击的一种方式是服务器端要求每次请求都包含一个 `token`，这个 `token` 不在前端生成，而是在我们每次访问站点的时候生成，并通过 `set-cookie` 的方式种到客户端，然后客户端发送请求的时候，从 `cookie` 中对应的字段读取出 `token`，然后添加到请求 `headers` 中。这样服务端就可以从请求 `headers` 中读取这个 `token` 并验证，由于这个 `token` 是很难伪造的，所以就能区分这个请求是否是用户正常发起的。
+
+我目前的理解难点在这句话
+
+> 服务器端要求每次请求都包含一个 `token`，这个 `token` 不在前端生成，而是在我们每次访问站点的时候生成
+
+demo中对应的代码为
+
+```js
+app.use(express.static(__dirname, {
+  setHeaders (res) {
+    res.cookie('XSRF-TOKEN-D', '1234abc')
+  }
+}))
+```
+
+逻辑上来看，每次服务器都有response header : `set-cookie: XSRF-TOKEN-D=1234abc`
+
+![image-20210528211118580](http://picbed.sedationh.cn/image-20210528211118580.png)
+
+```js
+const {
+  /*...*/
+  xsrfCookieName,
+  xsrfHeaderName
+} = config
+
+if ((withCredentials || isURLSameOrigin(url!)) && xsrfCookieName){
+  const xsrfValue = cookie.read(xsrfCookieName)
+  if (xsrfValue) {
+    headers[xsrfHeaderName!] = xsrfValue
+  }
+}
+```
+
+在之后的xhr请求中，把xsrfHeaderName添加到headers，value是访问页面的时候生成的token
+
+这个添加行为只有在同源 || CORS withCredentials的时候才进行
+
+![image-20210528211421578](http://picbed.sedationh.cn/image-20210528211421578.png)
+
+> 这里判定同源之看了protocal host ，为啥不看port呢？
+
+
+
+**理解的关键在于token，他是生成的，又是咋起作用的。**
+
+token既和用户绑定，又和时间相关，只有在真实当前访问页面的时候才进行生效
+
+另外，自己不太理解
+
+> CSRF 的防御手段有很多，比如验证请求的 referer，但是 referer 也是可以伪造的，所以杜绝此类攻击的一种方式是服务器端要求每次请求都包含一个 `token`
+
+how?
+
+TODO
+
+
+
+
+
+这个过程中有许多编码细节和实现技巧
+
+### 解析URL可以利用ATag Node
+
+```js
+const urlParsingNode = document.createElement('a')
+function resolveURL(url: string): URLOrigin {
+  urlParsingNode.setAttribute('href', url)
+  const { protocol, host } = urlParsingNode
+
+  return {
+    protocol,
+    host
+  }
+}
+```
+
+### regular expression 截取 cookie value
+
+目前还有个`\\s`看不明白
+
+```js
+const cookie = {
+  read(name: string): string | null {
+    const match = document.cookie.match(
+      new RegExp('(^|;\\s*)(' + name + ')=([^;]*)')
+    )
+    return match ? decodeURIComponent(match[3]) : null
+  }
+}
+```
 
 
 
