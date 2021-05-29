@@ -24,80 +24,92 @@ export default function(config: AxiosRequestConfig): AxiosPromise {
     const request = new XMLHttpRequest()
     request.open(method.toUpperCase(), url as string, true)
 
-    if (responseType) {
-      request.responseType = responseType
+    configureRequest()
+
+    addEvents()
+
+    processHeaders()
+
+    processCancel()
+
+    function configureRequest() {
+      if (responseType) {
+        request.responseType = responseType
+      }
+
+      if (timeout) {
+        request.timeout = timeout
+      }
+
+      if (withCredentials) {
+        request.withCredentials = true
+      }
     }
 
-    if (timeout) {
-      request.timeout = timeout
+    function addEvents() {
+      request.addEventListener('load', () => {
+        const responseHeaders = parseHeaders(request.getAllResponseHeaders())
+
+        const response: AxiosResponse = {
+          data: request.response,
+          status: request.status,
+          statusText: request.statusText,
+          headers: responseHeaders,
+          config,
+          request
+        }
+        handleResponse(response)
+      })
+
+      // https://github.com/axios/axios/blob/7821ed20892f478ca6aea929559bd02ffcc8b063/lib/adapters/xhr.js#L114
+      request.addEventListener('timeout', () => {
+        reject(
+          createError(
+            `Timeout of ${timeout} ms exceeded`,
+            config,
+            // 'ETIMEDOUT' : 'ECONNABORTED'?
+            'ECONNABORTED',
+            request
+          )
+        )
+      })
+
+      request.addEventListener('loadend', () => {
+        // console.log('loadend', request.status)
+      })
+
+      if (onDownloadProgress) {
+        request.addEventListener('progress', onDownloadProgress)
+      }
+
+      if (onUploadProgress) {
+        request.upload.addEventListener('progress', onUploadProgress)
+      }
     }
 
-    if (cancelToken) {
-      cancelToken.promise.then((reason: string) => {
-        request.abort()
-        reject(reason)
+    function processHeaders() {
+      if ((withCredentials || isURLSameOrigin(url!)) && xsrfCookieName) {
+        const xsrfValue = cookie.read(xsrfCookieName)
+        if (xsrfValue && xsrfHeaderName) {
+          headers[xsrfHeaderName] = xsrfValue
+        }
+      }
+
+      Object.keys(headers).forEach(name => {
+        request.setRequestHeader(name, headers[name])
       })
     }
 
-    if (withCredentials) {
-      request.withCredentials = true
-    }
-
-    if ((withCredentials || isURLSameOrigin(url!)) && xsrfCookieName) {
-      const xsrfValue = cookie.read(xsrfCookieName)
-      if (xsrfValue && xsrfHeaderName) {
-        headers[xsrfHeaderName] = xsrfValue
+    function processCancel() {
+      if (cancelToken) {
+        cancelToken.promise.then((reason: string) => {
+          request.abort()
+          reject(reason)
+        })
       }
     }
-
-    if (onDownloadProgress) {
-      request.onprogress = onDownloadProgress
-    }
-
-    if (onUploadProgress) {
-      request.upload.onprogress = onUploadProgress
-    }
-
-    Object.keys(headers).forEach(name => {
-      request.setRequestHeader(name, headers[name])
-    })
 
     request.send(data)
-
-    request.addEventListener('load', () => {
-      const responseHeaders = parseHeaders(request.getAllResponseHeaders())
-
-      const response: AxiosResponse = {
-        data: request.response,
-        status: request.status,
-        statusText: request.statusText,
-        headers: responseHeaders,
-        config,
-        request
-      }
-      handleResponse(response)
-    })
-
-    // https://github.com/axios/axios/blob/7821ed20892f478ca6aea929559bd02ffcc8b063/lib/adapters/xhr.js#L114
-    request.ontimeout = () => {
-      reject(
-        createError(
-          `Timeout of ${timeout} ms exceeded`,
-          config,
-          // 'ETIMEDOUT' : 'ECONNABORTED'?
-          'ECONNABORTED',
-          request
-        )
-      )
-    }
-
-    request.addEventListener('timeout', () => {
-      reject(new Error(`Timeout of ${timeout} ms exceeded`))
-    })
-
-    request.addEventListener('loadend', () => {
-      // console.log('loadend', request.status)
-    })
 
     function handleResponse(response: AxiosResponse) {
       if (response.status >= 200 && response.status < 300) {
